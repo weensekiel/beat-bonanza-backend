@@ -47,11 +47,48 @@ async function login(req, res) {
         res.json(foundUser);
 
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: "Internal server error" })
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 
+async function getScores(req, res) {
+    const userId = req.params.id;
+
+    try {
+        const userScores = await knex("scores")
+            .select("score")
+            .where({ user_id: userId });
+
+        if (userScores.length === 0) {
+            return res.status(404).json({
+                message: `Scores not found for user with ID ${userId}`
+            });
+        }
+
+        res.json(userScores);
+    } catch (error) {
+        console.error("Error retrieving scores:", error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+}
+
+async function postScore(req, res) {
+    const { userId, score } = req.body;
+
+    try {
+        await knex("scores").insert({
+            user_id: userId,
+            score: score
+        });
+
+        res.status(201).json({ message: "Score posted successfully" });
+    } catch (error) {
+        console.error("Error posting score:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
 
 
 async function getUser(req, res) {
@@ -75,4 +112,4 @@ async function getUser(req, res) {
     }
 };
 
-export { getUser, login, createUser };
+export { getUser, login, createUser, getScores, postScore };
